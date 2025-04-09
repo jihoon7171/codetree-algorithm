@@ -22,6 +22,15 @@ int distance(int x, int y, int gx, int gy){
 }
 
 
+void cout_space(){
+    for(int i=1;i<=n;i++){
+        for(int j=1;j<=n;j++){
+            cout<<space[i][j]<<" ";
+        }
+        cout<<"\n";
+    }
+    cout<<"\n";
+}
 
 bool checking_con(){
     for(int i=1;i<=m;i++){
@@ -39,7 +48,8 @@ void moving_human(queue<int>&q){
             for(int j=0;j<4;j++){
                 int newx = human[i].x+dx[j];
                 int newy = human[i].y+dy[j];
-                if(newx >=1 && newx <=n && newy >=1 && newy <=n && space[newy][newx] != -1){
+                if(newx >=1 && newx <=n && newy >=1 && newy <=n && space[newy][newx] != -1){//이동할 곳이 범위 내부에 있는지
+                    //거리가 최단거리인지
                     if(distance(human[i].x, human[i].y, con_position[i].x, con_position[i].y) > distance(newx, newy, con_position[i].x, con_position[i].y)){
                         human[i].x = newx;
                         human[i].y = newy;
@@ -55,7 +65,7 @@ void moving_human(queue<int>&q){
     }
 }
 
-void set_basecamp(int index){
+void set_basecamp(int index, queue<int>&p){
    // cout<<"함수시작\n";
     int cx = con_position[index].x;
     int cy = con_position[index].y;
@@ -70,14 +80,16 @@ void set_basecamp(int index){
                 human[index].x = basecamp_position[i].x;
                 human[index].y = basecamp_position[i].y;
                 newindex = i;
-               // cout<<human[index].y<<" "<<human[index].x<<" "<<d<<"\n";
+                
             }
         }
     }
     basecamp[newindex] = false;
+    cout<<index<<"집은"<<human[index].y<<" "<<human[index].x<<" "<<d<<"\n";
     human[index].x = basecamp_position[newindex].x;
     human[index].y = basecamp_position[newindex].y;
-    space[human[index].y][human[index].x] = -1;
+    //space[human[index].y][human[index].x] = -1;
+    p.push(newindex);
    // cout<<human[index].y << " "<<human[index].x<<"\n";
    // cout<<"함수 끝\n";
     return ;
@@ -90,27 +102,44 @@ void cout_human(){
     }
 }
 
+
+
 void go_con(){
     int t=1;
     int index = 1;
-    set_basecamp(index);
+    queue<int>p;
+    set_basecamp(index, p);
     space[human[1].y][human[1].x] = -1;
+    while(!p.empty()){
+        int comp = p.front();
+        space[basecamp_position[comp].y][basecamp_position[comp].x] = -1;
+        p.pop();
+    }
+   // cout<<1<<"번의 집은"<<human[1].y<<human[1].x
     while(checking_con()){ //checking_con 이 true 면 아직 방문해야하는 편의점이 존재한다는 의미
-        //cout<<t<<"초\n";
         t++;
+        cout<<t<<"초\n";
         queue<int>q;
-        //cout_human();
+        queue<int>p;
+        cout_human();
         moving_human(q);
         if(t<=m){
-            set_basecamp(t);
+            set_basecamp(t, p);
         }
         while(!q.empty()){
             int comp = q.front();
             space[con_position[comp].y][con_position[comp].x] = -1;
             q.pop();
             con[comp] = false;
-           // cout<<comp<<"편의점 false 완료";
+            cout<<comp<<"편의점 false 완료\n";
         }
+        while(!p.empty()){
+            cout<<t<<"번 집 지우기 완료\n";
+            int comp = p.front();
+            space[basecamp_position[comp].y][basecamp_position[comp].x] = -1;
+            p.pop();
+        }
+        cout_space();
         
     }
     cout<<t;
