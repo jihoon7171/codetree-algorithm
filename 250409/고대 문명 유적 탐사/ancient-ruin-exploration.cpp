@@ -160,7 +160,7 @@ bool go_rotation(int &counting){
             }
         }
     }
-    if(count == -1){
+    if(count <= -1){
         return false;
     }else{
         //cout<<result_rotation<<"asdfasdf ";
