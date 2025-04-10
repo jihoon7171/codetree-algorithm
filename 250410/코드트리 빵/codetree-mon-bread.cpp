@@ -39,31 +39,71 @@ bool checking_con(){
     return false;
 }
 
+position find_minimum(int index, vector<vector<int>>&visited){
+
+    position return_position;
+    int x = human[index].x;
+    int y = human[index].y;
+    int minx, miny;
+    int dis = 100000;
+    for(int i=0;i<4;i++){
+        int newx = x+dx[i];
+        int newy = y+dy[i];
+        if(newx >=1 && newx <=n && newy >=1 && newy <=n && visited[newy][newx] < dis && visited[newy][newx] != -1){
+            dis = visited[newy][newx];
+            minx = newx;
+            miny = newy;
+        }
+    }
+   // cout<<index<<" 번이 이동하는 위치는"<<miny<<" "<<minx<<"\n";
+    return_position  = {miny,minx};
+    return return_position;
+}
+
 void moving_human(queue<int>&q){
-    for(int i=1;i<=human.size();i++){
-        //아직 출발 안했거나 편의점에 도착했을경우 -> 움직이면 안됨
-        if((human[i].x == 0 && human[i].y == 0) || (human[i].x == con_position[i].x && human[i].y == con_position[i].y)){
+    for(int i=1;i<=human.size()-1;i++){
+        if(!con[i]||(human[i].x == 0 && human[i].y == 0) || (human[i].x == con_position[i].x && human[i].y == con_position[i].y)){
             continue;
-        }else{
-            for(int j=0;j<4;j++){
-                int newx = human[i].x+dx[j];
-                int newy = human[i].y+dy[j];
-                if(newx >=1 && newx <=n && newy >=1 && newy <=n && space[newy][newx] != -1){//이동할 곳이 범위 내부에 있는지
-                    //거리가 최단거리인지
-                    if(distance(human[i].x, human[i].y, con_position[i].x, con_position[i].y) > distance(newx, newy, con_position[i].x, con_position[i].y)){
-                        human[i].x = newx;
-                        human[i].y = newy;
-                        if(human[i].x == con_position[i].x && human[i].y == con_position[i].y){
-                            con[i] = false; // i 번은 편의점에 도착함 -> 맨 마지막에  맵에 -1 해줘야함
-                            q.push(i);
-                        }
-                        break;
+        }else {
+            vector<vector<int>>visited(n+1, vector<int>(n+1, -1));
+            visited[con_position[i].y][con_position[i].x] = 0;
+             int x = con_position[i].x;
+             int y = con_position[i].y;
+             queue<position>p;
+             p.push({y,x});
+             while(!p.empty()){
+                int nowx = p.front().x;
+                int nowy = p.front().y;
+                p.pop();
+                for(int j=0;j<4;j++){
+                    int newx = nowx+dx[j];
+                    int newy = nowy+dy[j];
+                    if(newx >=1 && newx <=n && newy >=1 && newy <=n && visited[newy][newx] == -1&&(space[newy][newx] == 0 || space[newy][newx] == 1)){
+                        visited[newy][newx] = visited[nowy][nowx]+1;
+                        p.push({newy,newx});
                     }
                 }
             }
+            position nposition = find_minimum(i, visited);
+            human[i].y = nposition.y;
+            human[i].x = nposition.x;
+           // cout<<"사람움직이기 시작"<<i<<"번째 사람 "<<human[i].y<<" "<<human[i].x<<"\n";
+            if(human[i].y == con_position[i].y && human[i].x == con_position[i].x){
+                q.push(i);
+                continue;
+            }
+            // cout<<i<<"움직이기 시작 후 위치\n";
+            // for(int i=1;i<=n;i++){
+            //     for(int j=1;j<=n;j++){
+            //         cout<<visited[i][j]<<" ";
+            //     }
+            //     cout<<"\n";
+            // }
+            // cout<<i<<"움직이기 시작 후 위치 end\n";
         }
     }
 }
+
 
 void set_basecamp(int index, queue<int>&p){
    // cout<<"함수시작\n";
@@ -85,7 +125,7 @@ void set_basecamp(int index, queue<int>&p){
         }
     }
     basecamp[newindex] = false;
-    cout<<index<<"집은"<<human[index].y<<" "<<human[index].x<<" "<<d<<"\n";
+   // cout<<index<<"집은"<<human[index].y<<" "<<human[index].x<<" "<<d<<"\n";
     human[index].x = basecamp_position[newindex].x;
     human[index].y = basecamp_position[newindex].y;
     //space[human[index].y][human[index].x] = -1;
@@ -97,9 +137,11 @@ void set_basecamp(int index, queue<int>&p){
 
 
 void cout_human(){
+    cout<<"모든 사람 위치 나오기 start\n";
     for(int i=1;i<=human.size();i++){
         cout<<human[i].y<<" "<<human[i].x<<"\n";
     }
+    cout<<"모든 사람 위치 나오기 끝\n";
 }
 
 
@@ -118,10 +160,10 @@ void go_con(){
    // cout<<1<<"번의 집은"<<human[1].y<<human[1].x
     while(checking_con()){ //checking_con 이 true 면 아직 방문해야하는 편의점이 존재한다는 의미
         t++;
-        cout<<t<<"초\n";
+       // cout<<t<<"초\n";
         queue<int>q;
         queue<int>p;
-        cout_human();
+        //cout_human();
         moving_human(q);
         if(t<=m){
             set_basecamp(t, p);
@@ -131,16 +173,17 @@ void go_con(){
             space[con_position[comp].y][con_position[comp].x] = -1;
             q.pop();
             con[comp] = false;
-            cout<<comp<<"편의점 false 완료\n";
+            //cout<<comp<<"편의점 false 완료\n";
         }
         while(!p.empty()){
-            cout<<t<<"번 집 지우기 완료\n";
+          //  cout<<t<<"번 집 지우기 완료\n";
             int comp = p.front();
             space[basecamp_position[comp].y][basecamp_position[comp].x] = -1;
             p.pop();
         }
-        cout_space();
-        
+       // cout<<"전체스페이스"<<"초\n";
+       // cout_space();
+       // cout<<"전체스페이스\n";
     }
     cout<<t;
 }
