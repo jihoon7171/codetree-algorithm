@@ -51,8 +51,9 @@ void spread_tree(vector<vector<bool>>&ispossible){\
             }
         }
     }
-    //printing();
-    //cout<<"\n";
+  //  cout<<"after spread tree\n";
+  //  printing();
+  //  cout<<"\n";
 }
 void grow_tree(){
     vector<vector<bool>>ispossible(n, vector<bool>(n, false));
@@ -72,10 +73,20 @@ void grow_tree(){
             }
         }
     }
+   // cout<<"after growup\n";
     //printing();
     spread_tree(ispossible);
 }
-//제초제 표시는 나중에 해야함 진짜로 돌릴떄 이거는 단순히 숫자 확인요
+void cout_jecho(){
+    for(int i=0;i<n;i++){
+        for(int j=0;j<n;j++){
+            cout<<space[i][j].jecho<<" ";
+        }
+        cout<<"\n";
+    }
+    cout<<"\n";
+}
+
 int do_spread_number(int x, int y){
     int result = space[y][x].tree;
     space[y][x].jecho++;
@@ -98,6 +109,8 @@ int do_spread_number(int x, int y){
             count++;
         }
     }
+   // cout_jecho();
+   // cout<<"\n";
     return result;
 }
 //제초제 표시는 나중에 해야함 진짜로 돌릴떄 이거는 단순히 숫자 확인요
@@ -115,6 +128,8 @@ int find_spread_number(int x, int y){
                 }else if(space[newy][newx].tree > 0){
                     //제초기 표기 추가
                     result += space[newy][newx].tree;
+                }else if(space[newy][newx].tree == -1){
+                    break;
                 }
             }
             count++;
@@ -147,7 +162,7 @@ void kill_jecho(){
 void plus_jecho(){
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
-            if(space[i][j].jecho > k){
+            if(space[i][j].jecho > 0){
                 space[i][j].jecho++;
             }
         }
@@ -159,6 +174,7 @@ void find_maximum(){
     int comp = -1;
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
+            if( space[i][j].tree == -1) continue;
             int temp = find_spread_number(j,i);
             if(comp < temp){
                 comp = temp;
@@ -167,7 +183,7 @@ void find_maximum(){
             }
         }
     }
-
+    //cout<<go_position.second<<" "<<go_position.first<<"\n";
     do_spread_number(go_position.second, go_position.first);
 }
 
@@ -191,13 +207,20 @@ int main() {
     //cout<<"\n";
     int answer = 0;
     for(int i=0;i<m;i++){
+        if(i>1){
+        plus_jecho();
+        }
+
         kill_jecho();
+      //  cout<<"after kill_jecho\n";
+      //  cout_jecho();
         grow_tree();
         find_maximum();      
         kill_tree(answer);
-        plus_jecho();
+
+       // cout_jecho();
        // cout<<i<<"번째 ㄱ끝나고 space"<<"\n";
-       // printing();
+        //printing();
        // cout<<"\n";
     }
     cout<<answer;        
