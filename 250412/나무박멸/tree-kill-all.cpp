@@ -24,7 +24,7 @@ void printing(){
         cout<<"\n";
     }
 }
-void spread_tree(vector<vector<bool>>&ispossible){\
+void spread_tree(vector<vector<bool>>&ispossible){
     vector<vector<info>>copy_space(space);
 
     //cout<<"spread_tree start\n";
@@ -41,6 +41,7 @@ void spread_tree(vector<vector<bool>>&ispossible){\
                 }
                 if(count == 0) continue;
                 int temp = copy_space[i][j].tree / count; 
+                //if(temp == 0) continue;
                     for(int k=0;k<7;k+=2){
                     int newx = j + dx[k];
                     int newy = i+dy[k];
@@ -89,13 +90,17 @@ void cout_jecho(){
 
 int do_spread_number(int x, int y){
     int result = space[y][x].tree;
-    space[y][x].jecho++;
+    space[y][x].jecho = 1;
     for(int i=1;i<8;i+=2){
         int count = 1;
         while(count<=k){
             int newx = x+dx[i]*count;
             int newy =y+dy[i]*count;
             if(newx>=0&&newx<n&&newy>=0&&newy<n){
+                if(space[newy][newx].jecho > 0){
+                    space[newy][newx].jecho = 1;
+                    continue;
+                }
                 if(space[newy][newx].tree == 0){
                     space[newy][newx].jecho = 1;
                     break;
@@ -103,6 +108,7 @@ int do_spread_number(int x, int y){
                     space[newy][newx].jecho = 1;
                     result += space[newy][newx].tree;
                 }else if(space[newy][newx].tree == -1){
+                    space[newy][newx].jecho = 1;
                     break;
                 }
             }
@@ -141,7 +147,7 @@ int find_spread_number(int x, int y){
 void kill_tree(int &answer){
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
-            if(space[i][j].jecho > 0){
+            if(space[i][j].jecho > 0 && space[i][j].tree != -1){
                 answer +=space[i][j].tree;
                 space[i][j].tree = 0;
             }
@@ -152,7 +158,7 @@ void kill_tree(int &answer){
 void kill_jecho(){
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
-            if(space[i][j].jecho > c){
+            if(space[i][j].jecho > c+1){
                 space[i][j].jecho = 0;
             }
         }
@@ -174,8 +180,10 @@ void find_maximum(){
     int comp = -1;
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
-            if( space[i][j].tree == -1 || space[i][j].jecho > 0 || space[i][j].tree == 0) continue;
-            int temp = find_spread_number(j,i);
+            if( space[i][j].tree == -1) continue;
+            int temp = 0;
+            temp = find_spread_number(j,i);
+            
             if(comp < temp){
                 comp = temp;
                 go_position.first = i;
@@ -207,11 +215,9 @@ int main() {
     //cout<<"\n";
     int answer = 0;
     for(int i=0;i<m;i++){
-        if(i>1){
         plus_jecho();
-        }
-
         kill_jecho();
+
       //  cout<<"after kill_jecho\n";
       //  cout_jecho();
         grow_tree();
