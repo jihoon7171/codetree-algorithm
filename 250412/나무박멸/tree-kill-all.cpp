@@ -174,7 +174,7 @@ void find_maximum(){
     int comp = -1;
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
-            if( space[i][j].tree == -1 || space[i][j].tree == 0) continue;
+            if( space[i][j].tree == -1 || space[i][j].jecho > 0 || space[i][j].tree == 0) continue;
             int temp = find_spread_number(j,i);
             if(comp < temp){
                 comp = temp;
