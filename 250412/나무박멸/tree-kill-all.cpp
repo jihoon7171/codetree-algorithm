@@ -24,13 +24,13 @@ void printing(){
         cout<<"\n";
     }
 }
+
 void spread_tree(vector<vector<bool>>&ispossible){
     vector<vector<info>>copy_space(space);
-
     //cout<<"spread_tree start\n";
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
-            if(space[i][j].tree>0 && ispossible[i][j]){
+            if(space[i][j].tree>0 && ispossible[i][j]&&space[i][j].jecho == 0){
                 int count  = 0;
                 for(int k=0;k<7;k+=2){
                     int newx = j + dx[k];
@@ -41,7 +41,6 @@ void spread_tree(vector<vector<bool>>&ispossible){
                 }
                 if(count == 0) continue;
                 int temp = copy_space[i][j].tree / count; 
-                //if(temp == 0) continue;
                     for(int k=0;k<7;k+=2){
                     int newx = j + dx[k];
                     int newy = i+dy[k];
@@ -90,31 +89,28 @@ void cout_jecho(){
 
 int do_spread_number(int x, int y){
     int result = space[y][x].tree;
-    space[y][x].jecho = 1;
+    space[y][x].jecho = c;
     for(int i=1;i<8;i+=2){
         int count = 1;
         while(count<=k){
             int newx = x+dx[i]*count;
             int newy =y+dy[i]*count;
             if(newx>=0&&newx<n&&newy>=0&&newy<n){
-                if(space[newy][newx].jecho > 0){
-                    space[newy][newx].jecho = 1;
-                    continue;
-                }
                 if(space[newy][newx].tree == 0){
-                    space[newy][newx].jecho = 1;
+                    space[newy][newx].jecho = c;
                     break;
                 }else if(space[newy][newx].tree > 0){
-                    space[newy][newx].jecho = 1;
+                    space[newy][newx].jecho = c;
                     result += space[newy][newx].tree;
                 }else if(space[newy][newx].tree == -1){
-                    space[newy][newx].jecho = 1;
+                    space[newy][newx].jecho = c;
                     break;
                 }
             }
             count++;
         }
     }
+
    // cout_jecho();
    // cout<<"\n";
     return result;
@@ -147,8 +143,10 @@ int find_spread_number(int x, int y){
 void kill_tree(int &answer){
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
-            if(space[i][j].jecho > 0 && space[i][j].tree != -1){
+            if(space[i][j].jecho > 0&& space[i][j].tree>0){
                 answer +=space[i][j].tree;
+               // cout<<"죽는 나무의 수\n";
+               // cout<<space[i][j].tree<<"\n";
                 space[i][j].tree = 0;
             }
         }
@@ -158,18 +156,18 @@ void kill_tree(int &answer){
 void kill_jecho(){
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
-            if(space[i][j].jecho > c+1){
+            if(space[i][j].jecho > c ){
                 space[i][j].jecho = 0;
             }
         }
     }
 }
 
-void plus_jecho(){
+void minus_jecho(){
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
             if(space[i][j].jecho > 0){
-                space[i][j].jecho++;
+                space[i][j].jecho--;
             }
         }
     }
@@ -181,13 +179,11 @@ void find_maximum(){
     for(int i=0;i<n;i++){
         for(int j=0;j<n;j++){
             if( space[i][j].tree == -1) continue;
-            int temp = 0;
-            temp = find_spread_number(j,i);
-            
+            int temp = find_spread_number(j,i);
             if(comp < temp){
                 comp = temp;
                 go_position.first = i;
-                go_position.second = j;
+                go_position.second = j;  
             }
         }
     }
@@ -215,20 +211,19 @@ int main() {
     //cout<<"\n";
     int answer = 0;
     for(int i=0;i<m;i++){
-        plus_jecho();
-        kill_jecho();
 
-      //  cout<<"after kill_jecho\n";
+     //  cout<<"after kill_jecho\n";     
       //  cout_jecho();
         grow_tree();
-        find_maximum();      
-        kill_tree(answer);
-
+        minus_jecho();
+        find_maximum();     
+        kill_tree(answer); 
        // cout_jecho();
-       // cout<<i<<"번째 ㄱ끝나고 space"<<"\n";
-        //printing();
+      //  cout<<i<<"번째 ㄱ끝나고 space"<<"\n";
+       // printing();
        // cout<<"\n";
+     
     }
-    cout<<answer;        
-
+    
+    cout<<answer;    
 }
