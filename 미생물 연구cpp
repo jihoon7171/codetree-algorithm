@@ -1,0 +1,203 @@
+#include <iostream>
+#include<queue>
+#include<vector>
+#include<algorithm>
+using namespace std;
+int n,q;
+int dx[4] = {1,-1,0,0};
+int dy[4] = {0,0,-1,1};
+vector<bool>cellvisited;
+vector<int>cellsize;
+vector<vector<int>>space;
+vector<bool>survive;
+
+bool cmp(const pair<int, int>& a, const pair<int, int>& b) {
+    if (a.first != b.first) {
+        return a.first> b.first;  // first 큰 게 먼저
+    }
+    return a.second < b.second;   // first 같으면 second 작은 게 먼저
+}
+void output(){
+    for(int i=0;i<n;i++){
+        for(int j=0;j<n;j++){
+            cout<<space[i][j]<<" ";
+        }
+        cout<<"\n";
+    }
+}
+void deletecell(int nownum){
+    for(int i=0;i<n;i++){
+        for(int j=0;j<n;j++){
+            if(space[i][j] == nownum){
+                space[i][j] = 0;
+            }
+        }
+    }
+}
+bool fillin(int cellnumber, vector<vector<int>>& newspace){
+    vector<pair<int,int>> mv;
+    int basex = -1, basey = -1;
+    for(int i=0;i<n;i++){
+        for(int j=0;j<n;j++){
+            if(space[i][j] == cellnumber){
+                mv.push_back({j,i});
+                if(basex == -1){
+                    basex = j;
+                    basey = i;
+                }
+            }
+        }
+    }
+    if(mv.empty()) return false; // 해당 셀이 없으면 실패
+    for(int tx = 0; tx < n; ++tx){
+        for(int ty = 0; ty < n; ++ty){
+            int xdis = tx - basex;
+            int ydis = ty - basey;
+            bool ok = true;
+            // 먼저 모든 칸을 검증 (범위 + 충돌)
+            for(size_t k = 0; k < mv.size(); ++k){
+                int nx = mv[k].first;
+                int ny = mv[k].second;
+                int gx = nx + xdis;
+                int gy = ny + ydis;
+                if(gx < 0 || gx >= n || gy < 0 || gy >= n){
+                    ok = false;
+                    break;
+                }
+                if(newspace[gy][gx] != 0){
+                    ok = false;
+                    break;
+                }
+            }
+            if(ok){
+                for(size_t k = 0; k < mv.size(); ++k){
+                    int nx = mv[k].first;
+                    int ny = mv[k].second;
+                    int gx = nx + xdis;
+                    int gy = ny + ydis;
+                    newspace[gy][gx] = cellnumber;
+                }
+                return true;
+            }
+        }
+    }
+    return false;
+}
+void movecell(vector<pair<int, int>>&v){
+    vector<vector<int>>newspace(n, vector<int>(n));
+
+    for(int i=0;i<v.size();i++){
+        int nowc = v[i].second;
+        if(fillin(v[i].second, newspace)){
+        }
+    }
+    space = newspace;
+}
+int cell_check_bfs(int y, int x, vector<vector<bool>>&visited){
+    int s = 1;
+    visited[y][x] = true;
+    queue<pair<int, int>>q;
+    q.push({y,x});
+    int cell = space[y][x];
+    while(!q.empty()){
+        int nowx = q.front().second;
+        int nowy = q.front().first;
+        q.pop();
+        for(int i=0;i<4;i++){
+            int newx = nowx+dx[i];
+            int newy=  nowy+dy[i];
+            if(newx>=0&&newx<n&&newy>=0&&newy<n&&!visited[newy][newx]&&space[newy][newx] == cell){
+                visited[newy][newx] = true;
+                q.push({newy, newx});
+                s++;
+            }
+        }
+    }
+    return s;
+}
+void gocell(int y,int x,int goy,int gox, int now){
+    for(int i=y;i<goy;i++){
+        for(int j=x;j<gox;j++){
+            space[i][j] = now;
+        }
+    }
+    vector<pair<int, int>>v; // 크기,  세포넘버 , 크기가 클수록 + 세포넘버가 작을수록 앞에 있게 정렬해줘야함
+    for(int i=0;i<=q;i++){
+        cellvisited[i] = false;
+        cellsize[i] = 0;
+    }
+    vector<vector<bool>>visited(n,vector<bool>(n));
+    for(int i=0;i<n;i++){
+        for(int j=0;j<n;j++){
+            if(space[i][j]!=0 && !visited[i][j]){
+                int nowcell = space[i][j];
+                if(cellvisited[nowcell]){
+                    deletecell(nowcell);
+                    cellsize[nowcell] = 0;
+                }else{
+                    cellvisited[nowcell] = true;
+                    int ns = cell_check_bfs(i,j, visited);
+                    cellsize[nowcell] = ns;
+                }
+            }
+        }
+    }
+
+    for(int i=1;i<=q;i++){
+        if(cellsize[i] != 0){
+            v.push_back({cellsize[i], i});
+        }
+    }
+    sort(v.begin(), v.end(), cmp);
+    movecell(v);
+}
+void answer(){
+    vector<vector<bool>>checked(q+1, vector<bool>(q+1));
+
+    for(int i=0;i<=q;i++){
+        cellsize[i] = 0;
+    }
+    vector<vector<bool>>visited(n, vector<bool>(n));
+    for(int i=0;i<n;i++){
+        for(int j=0;j<n;j++){
+            if(!visited[i][j] && space[i][j] != 0){
+                visited[i][j] = true;
+                int cn = space[i][j];
+                cellsize[cn] = cell_check_bfs(i,j,visited);
+            }
+        }
+    }
+    int ans = 0;
+    for(int i=0;i<n;i++){
+        for(int j=0;j<n;j++){
+            for(int k=0;k<4;k++){
+                int newx = j+dx[k];
+                int newy = i+dy[k];
+                if(newx>=0&&newx<n&&newy>=0&&newy<n){
+                    int one = space[i][j];
+                    int two = space[newy][newx];
+                    if(one == 0 || two == 0) continue;
+                    if(!checked[one][two] && !checked[two][one]&& one != two){
+                        ans += cellsize[one] * cellsize[two];
+                        checked[one][two] = true;
+                        checked[two][one] = true;
+                    }
+                }
+            }
+        }
+    }
+    cout<<ans<<"\n";
+}
+int main() {
+    cin>>n>>q;
+    cellsize.resize(q+1);
+    cellvisited.resize(q+1);
+    survive.resize(q+1);
+    space.resize(n, vector<int>(n));
+    for(int i=1;i<=q;i++){
+        int x,y,gx,gy;
+        cin>>x>>y>>gx>>gy;
+        gocell(y,x,gy,gx,i);
+        answer();
+    }
+}
